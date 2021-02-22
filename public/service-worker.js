@@ -9,6 +9,9 @@ const FILES_TO_CACHE = [
   `/index.js`,
   `/manifest.webmanifest`,
   `/icons/icon-144x144.png`,
+  `/icons/icon-128x128.png`,
+  `/icons/icon-96x96.png`,
+  `/icons/icon-72x72.png`,
   `/style.css`,
 ];
 
