@@ -3,8 +3,8 @@
   "short_name": "Budget Tracker",
   "icons": [
     {
-      "src": "/assets/icons/moneyicon192x192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
       "type": "image/png"
     }
   ],
