@@ -1,81 +1,77 @@
-console.log('This is your service-worker.js file!');
+"use strict";
+
+console.log("Hello from your friendly neighborhood service worker!");
 
 const FILES_TO_CACHE = [
-    `/db.js`,
-    `/index.html`,
-    `/index.js`,
-    `/stycle.css`,
-    `/manifest.webmanifest`,
-    `icons/icon-144x144.png`,
-    `icons/icon-128x128.png`,
-    `icons/icon-96x96.png`,
-    `icons/icon-72x72.png`
+  `/`,
+  `/index.html`,
+  `/db.js`,
+  `/index.js`,
+  `/manifest.webmanifest`,
+  `/icons/icon-192x192.png`,
+  `/style.css`,
 ];
 
-const CACHE_NAME = "static-cache-v1";
-const DATA_CACHE_NAME = "data-cache-v1";
+const CACHE_NAME = `static-cache-v1`;
+const DATA_CACHE_NAME = `data-cache-v1`;
 
-self.addEventListener("install", function (evt) {
-    // pre cache image data
-    evt.waitUntil(
-        caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/icons"))
-    );
-    
-    evt.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            console.log("Your files were pre-cached successfully!");
-            return cache.addAll(FILES_TO_CACHE);
-        })
-    );
+// Install
+self.addEventListener(`install`, (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log(`Your files were pre-cached successfully!`);
+      return cache.addAll(FILES_TO_CACHE);
+    })
+  );
 
-    self.skipWaiting();
+  self.skipWaiting();
 });
 
-self.addEventListener("activate", function (evt) {
-    evt.waitUntil(
-        caches.keys().then(keyList => {
-            return Promise.all(
-                keyList.map(key => {
-                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-                        console.log("Removing old cache data", key);
-                        return caches.delete(key);
-                    }
-                })
-            );
+// Activate
+self.addEventListener(`activate`, (evt) => {
+  evt.waitUntil(
+    caches.keys().then((keyList) =>
+      Promise.all(
+        keyList.map((key) => {
+          if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+            console.log(`Removing old cache data`, key);
+            return caches.delete(key);
+          }
+          return undefined;
         })
-    );
+      )
+    )
+  );
 
-    self.clients.claim();
+  self.clients.claim();
 });
 
-self.addEventListener("fetch", function (evt) {
-    if (evt.request.url.includes("/api/")) {
-        evt.respondWith(
-            caches.open(DATA_CACHE_NAME).then(cache => {
-                return fetch(evt.request)
-                    .then(response => {
-                        // If the response was good, clone it and store it in the cache.
-                        if (response.status === 200) {
-                            cache.put(evt.request.url, response.clone());
-                        }
-                        return response;
-                    })
-                    .catch(err => {
-                        // Network request failed, try to get it from the cache.
-                        return cache.match(evt.request);
-                    });
-            }).catch(err => {
-                console.log(err)
-            })
-        );
-
-        return;
-    }
+// Fetch event
+self.addEventListener(`fetch`, (evt) => {
+  if (evt.request.url.includes(`/api/`)) {
     evt.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(evt.request).then(response => {
-                return response || fetch(evt.request);
-            });
-        })
+      caches
+        .open(DATA_CACHE_NAME)
+        .then((cache) =>
+          fetch(evt.request)
+            .then((response) => {
+              // If the response was good, clone it and store it in the cache.
+              if (response.status === 200) {
+                cache.put(evt.request.url, response.clone());
+              }
+
+              return response;
+            })
+            // Network request failed, try to get it from the cache.
+            .catch(() => cache.match(evt.request))
+        )
+        .catch((err) => console.log(err))
     );
+  } else {
+    evt.respondWith(
+      caches
+        .match(evt.request)
+        .then((response) => response || fetch(evt.request))
+    );
+  }
 });
